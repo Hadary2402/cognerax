@@ -74,19 +74,22 @@ export default function ContactPage() {
       return;
     }
     
-    // Check if API base URL is set (warn if using relative path)
+    // Get the actual endpoint URL (computed dynamically)
+    const endpointUrl = API_ENDPOINTS.CONTACT;
     const apiBaseUrl = typeof window !== 'undefined' ? (window as any).__API_BASE_URL__ : '';
-    if (!apiBaseUrl && API_ENDPOINTS.CONTACT.startsWith('/')) {
+    
+    // Check if endpoint is a relative path (won't work with static hosting)
+    if (endpointUrl.startsWith('/')) {
       console.error('[Contact Form] ⚠️ WARNING: API base URL not configured!');
-      console.error('[Contact Form] Using relative path:', API_ENDPOINTS.CONTACT);
+      console.error('[Contact Form] Using relative path:', endpointUrl);
       console.error('[Contact Form] This will NOT work with static hosting.');
       console.error('[Contact Form] Please set NEXT_PUBLIC_API_BASE_URL environment variable.');
       setSubmitStatus('error');
       return;
     }
     
-    console.log('[Contact Form] API endpoint:', API_ENDPOINTS.CONTACT);
-    console.log('[Contact Form] API base URL:', apiBaseUrl || 'Not set (using relative)');
+    console.log('[Contact Form] API endpoint:', endpointUrl);
+    console.log('[Contact Form] API base URL:', apiBaseUrl || 'Set via window.__API_BASE_URL__');
     
     // Check Turnstile token
     if (!turnstileToken) {
@@ -248,7 +251,7 @@ export default function ContactPage() {
         hasToken: !!turnstileToken
       });
 
-      const response = await fetch(API_ENDPOINTS.CONTACT, {
+      const response = await fetch(endpointUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

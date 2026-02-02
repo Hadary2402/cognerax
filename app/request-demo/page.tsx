@@ -66,28 +66,29 @@ export default function RequestDemoPage() {
       return;
     }
     
-    // Check if API base URL is set (warn if using relative path)
+    // Get the actual endpoint URL (computed dynamically)
+    const endpointUrl = API_ENDPOINTS.REQUEST_DEMO;
     const apiBaseUrl = typeof window !== 'undefined' ? (window as any).__API_BASE_URL__ : '';
-    console.log('[Request Demo Form] Raw window.__API_BASE_URL__:', apiBaseUrl);
     
-    // Check if endpoint is missing protocol (common issue)
-    if (API_ENDPOINTS.REQUEST_DEMO && !API_ENDPOINTS.REQUEST_DEMO.match(/^https?:\/\//) && !API_ENDPOINTS.REQUEST_DEMO.startsWith('/')) {
-      console.error('[Request Demo Form] ⚠️ WARNING: API endpoint missing protocol!');
-      console.error('[Request Demo Form] Endpoint:', API_ENDPOINTS.REQUEST_DEMO);
-      console.error('[Request Demo Form] This will cause 405 errors. Please set NEXT_PUBLIC_API_BASE_URL with https://');
-    }
-    
-    if (!apiBaseUrl && API_ENDPOINTS.REQUEST_DEMO.startsWith('/')) {
+    // Check if endpoint is a relative path (won't work with static hosting)
+    if (endpointUrl.startsWith('/')) {
       console.error('[Request Demo Form] ⚠️ WARNING: API base URL not configured!');
-      console.error('[Request Demo Form] Using relative path:', API_ENDPOINTS.REQUEST_DEMO);
+      console.error('[Request Demo Form] Using relative path:', endpointUrl);
       console.error('[Request Demo Form] This will NOT work with static hosting.');
       console.error('[Request Demo Form] Please set NEXT_PUBLIC_API_BASE_URL environment variable.');
       setSubmitStatus('error');
       return;
     }
     
-    console.log('[Request Demo Form] API endpoint:', API_ENDPOINTS.REQUEST_DEMO);
-    console.log('[Request Demo Form] API base URL:', apiBaseUrl || 'Not set (using relative)');
+    // Check if endpoint is missing protocol (should be handled automatically, but warn if not)
+    if (endpointUrl && !endpointUrl.match(/^https?:\/\//) && !endpointUrl.startsWith('/')) {
+      console.warn('[Request Demo Form] ⚠️ WARNING: API endpoint missing protocol!');
+      console.warn('[Request Demo Form] Endpoint:', endpointUrl);
+      console.warn('[Request Demo Form] Protocol should be added automatically.');
+    }
+    
+    console.log('[Request Demo Form] API endpoint:', endpointUrl);
+    console.log('[Request Demo Form] API base URL:', apiBaseUrl || 'Set via window.__API_BASE_URL__');
     
     // Honeypot check - if this field is filled, it's likely a bot
     // Check both React state AND actual DOM element (in case value was changed via inspect element)
@@ -194,7 +195,7 @@ export default function RequestDemoPage() {
       // For JSON body, sanitize for Excel only (JSON.stringify handles JSON escaping)
       const sanitizedDataForApi = sanitizeObjectForExcel(unicodeConvertedData)
       
-      console.log('[Request Demo Form] Sending request to:', API_ENDPOINTS.REQUEST_DEMO);
+      console.log('[Request Demo Form] Sending request to:', endpointUrl);
       console.log('[Request Demo Form] Request payload:', {
         name: sanitizedDataForApi.name,
         email: sanitizedDataForApi.email,
@@ -202,43 +203,72 @@ export default function RequestDemoPage() {
         hasToken: !!turnstileToken
       });
       
-      const response = await fetch(API_ENDPOINTS.REQUEST_DEMO, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name: sanitizedDataForApi.name,
-          email: sanitizedDataForApi.email,
-          company: sanitizedDataForApi.company,
-          message: sanitizedDataForApi.message,
-          formType: 'request-demo',
-          timestamp,
-          emailHtml,
-          emailText,
-          turnstileToken: turnstileToken
+      let response: Response
+      try {
+        response = await fetch(endpointUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            name: sanitizedDataForApi.name,
+            email: sanitizedDataForApi.email,
+            company: sanitizedDataForApi.company,
+            message: sanitizedDataForApi.message,
+            formType: 'request-demo',
+            timestamp,
+            emailHtml,
+            emailText,
+            turnstileToken: turnstileToken
+          })
         })
-      })
+      } catch (fetchError: any) {
+        console.error('[Request Demo Form] Fetch error:', fetchError);
+        throw new Error(`Network error: ${fetchError?.message || 'Failed to connect to server'}. Please check if the API is deployed correctly.`)
+      }
 
       console.log('[Request Demo Form] Response status:', response.status);
       console.log('[Request Demo Form] Response ok:', response.ok);
       
-      const responseData = await response.json().catch((parseError) => {
-        console.error('[Request Demo Form] Failed to parse response as JSON:', parseError);
-        return { error: 'Failed to parse server response' };
-      });
+      // Handle different response types
+      let responseData: any = {}
+      const contentType = response.headers.get('content-type')
+      
+      if (contentType && contentType.includes('application/json')) {
+        try {
+          responseData = await response.json()
+        } catch (parseError) {
+          console.error('[Request Demo Form] Failed to parse JSON response:', parseError);
+          const textResponse = await response.text().catch(() => 'No response body')
+          console.error('[Request Demo Form] Response text:', textResponse);
+          responseData = { error: 'Invalid server response format' }
+        }
+      } else {
+        const textResponse = await response.text().catch(() => 'No response body')
+        console.warn('[Request Demo Form] Non-JSON response received:', textResponse.substring(0, 200));
+        responseData = { error: `Server returned ${response.status}: ${textResponse.substring(0, 100)}` }
+      }
+      
       console.log('[Request Demo Form] Response data:', responseData);
       
       if (!response.ok) {
         console.error('[Request Demo Form] API error:', responseData)
         
-        // Check for specific error types
-        if (responseData.error) {
-          // Display the API error message
-          console.error('[Request Demo Form] API error message:', responseData.error)
+        // Provide specific error messages based on status code
+        let errorMessage = responseData.error || `Server error (${response.status})`
+        
+        if (response.status === 405) {
+          errorMessage = 'API route not found or method not allowed. Please ensure API routes are deployed on Vercel.'
+        } else if (response.status === 404) {
+          errorMessage = 'API endpoint not found. Please check the API base URL configuration.'
+        } else if (response.status === 500) {
+          errorMessage = 'Server error. Please try again later or contact support.'
+        } else if (response.status === 400) {
+          errorMessage = responseData.error || 'Invalid request. Please check your input.'
         }
         
-        throw new Error(responseData.error || `HTTP error! status: ${response.status}`)
+        console.error('[Request Demo Form] API error message:', errorMessage)
+        throw new Error(errorMessage)
       }
 
       // Success - show notification
@@ -259,15 +289,26 @@ export default function RequestDemoPage() {
       console.error('[Request Demo Form] Error details:', {
         message: error?.message,
         stack: error?.stack,
-        name: error?.name
+        name: error?.name,
+        endpoint: endpointUrl
       });
       
-      // Check if it's a network error
-      if (error?.message?.includes('fetch') || error?.message?.includes('network') || error?.message?.includes('Failed to fetch')) {
-        console.error('[Request Demo Form] Network error - API endpoint may be unreachable');
-        setSubmitStatus('error');
+      // Set error status - the UI will display the error message
+      setSubmitStatus('error');
+      
+      // Log specific error types for debugging
+      if (error?.message?.includes('Network error') || error?.message?.includes('Failed to fetch')) {
+        console.error('[Request Demo Form] ❌ Network error - API endpoint may be unreachable');
+        console.error('[Request Demo Form] Endpoint URL:', endpointUrl);
+        console.error('[Request Demo Form] Please verify:');
+        console.error('[Request Demo Form] 1. API routes are deployed on Vercel');
+        console.error('[Request Demo Form] 2. NEXT_PUBLIC_API_BASE_URL is set correctly');
+        console.error('[Request Demo Form] 3. The API endpoint URL is correct');
+      } else if (error?.message?.includes('405')) {
+        console.error('[Request Demo Form] ❌ 405 Error - API route exists but method not allowed');
+        console.error('[Request Demo Form] This usually means API routes are not properly deployed');
       } else {
-        setSubmitStatus('error');
+        console.error('[Request Demo Form] ❌ Submission failed:', error?.message);
       }
     } finally {
       setIsSubmitting(false)
