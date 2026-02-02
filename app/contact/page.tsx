@@ -65,6 +65,15 @@ export default function ContactPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     e.stopPropagation() // Prevent any event bubbling
+    console.log('[Contact Form] handleSubmit called');
+    
+    // Check API endpoint configuration
+    if (!API_ENDPOINTS.CONTACT) {
+      console.error('[Contact Form] API endpoint not configured');
+      setSubmitStatus('error');
+      return;
+    }
+    console.log('[Contact Form] API endpoint:', API_ENDPOINTS.CONTACT);
     
     // Check Turnstile token
     if (!turnstileToken) {
@@ -218,6 +227,14 @@ export default function ContactPage() {
       // For JSON body, sanitize for Excel only (JSON.stringify handles JSON escaping)
       const sanitizedDataForApi = sanitizeObjectForExcel(unicodeConvertedData)
       
+      console.log('[Contact Form] Sending request to:', API_ENDPOINTS.CONTACT);
+      console.log('[Contact Form] Request payload:', {
+        name: sanitizedDataForApi.name,
+        email: sanitizedDataForApi.email,
+        company: sanitizedDataForApi.company,
+        hasToken: !!turnstileToken
+      });
+
       const response = await fetch(API_ENDPOINTS.CONTACT, {
         method: 'POST',
         headers: {
@@ -237,7 +254,13 @@ export default function ContactPage() {
         })
       })
 
-      const responseData = await response.json().catch(() => ({}))
+      console.log('[Contact Form] Response status:', response.status);
+      console.log('[Contact Form] Response ok:', response.ok);
+
+      const responseData = await response.json().catch((parseError) => {
+        console.error('[Contact Form] Failed to parse response as JSON:', parseError);
+        return { error: 'Failed to parse server response' };
+      })
       console.log('[Contact Form] Response data:', responseData)
       
       if (!response.ok) {
@@ -278,9 +301,21 @@ export default function ContactPage() {
         const stored = getRawRateLimitData()
         console.log('[Contact Form] Current rate limit data in localStorage:', stored)
       }
-    } catch (error) {
-      console.error('Error submitting form:', error)
-      setSubmitStatus('error')
+    } catch (error: any) {
+      console.error('[Contact Form] Error submitting form:', error);
+      console.error('[Contact Form] Error details:', {
+        message: error?.message,
+        stack: error?.stack,
+        name: error?.name
+      });
+      
+      // Check if it's a network error
+      if (error?.message?.includes('fetch') || error?.message?.includes('network') || error?.message?.includes('Failed to fetch')) {
+        console.error('[Contact Form] Network error - API endpoint may be unreachable');
+        setSubmitStatus('error');
+      } else {
+        setSubmitStatus('error');
+      }
     } finally {
       setIsSubmitting(false)
     }
@@ -306,23 +341,23 @@ export default function ContactPage() {
                 (formRef as any).current = el
                 if (!listenerAttachedRef.current) {
                   const handleNativeSubmit = (e: Event) => {
-                    console.log('[Contact Form] NATIVE SUBMIT EVENT CAUGHT - PREVENTING DEFAULT AND REDIRECT', e)
-                    e.preventDefault()
-                    e.stopPropagation()
-                    e.stopImmediatePropagation()
-                    if (e.cancelable) {
+                    // Only prevent default if React handler hasn't already handled it
+                    // React's synthetic events run before native events in bubble phase
+                    // So we only need to prevent in capture phase to stop browser navigation
+                    if (e.eventPhase === Event.CAPTURING_PHASE) {
                       e.preventDefault()
+                      e.stopPropagation()
                     }
-                    return false
                   }
+                  // Only attach in capture phase to prevent browser navigation
+                  // Let React handler run in bubble phase
                   el.addEventListener('submit', handleNativeSubmit, { capture: true, passive: false })
-                  el.addEventListener('submit', handleNativeSubmit, { capture: false, passive: false })
                   listenerAttachedRef.current = true
                 }
               }
             }}
             onSubmit={handleSubmit}
-            action="/api/contact"
+            action="#"
             method="post"
             noValidate
             className="bg-gray-50 dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 p-8 lg:p-10 relative" 

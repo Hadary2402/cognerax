@@ -44,6 +44,15 @@ export default function Newsletter() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('[Newsletter Form] handleSubmit called');
+    
+    // Check API endpoint configuration
+    if (!API_ENDPOINTS.NEWSLETTER) {
+      console.error('[Newsletter Form] API endpoint not configured');
+      setSubmitStatus("error");
+      return;
+    }
+    console.log('[Newsletter Form] API endpoint:', API_ENDPOINTS.NEWSLETTER);
     
     // Check Turnstile token
     if (!turnstileToken) {
@@ -141,6 +150,12 @@ export default function Newsletter() {
       // But sanitize for Excel safety if needed
       const sanitizedEmailForApi = sanitizeForExcel(unicodeConvertedEmail);
       
+      console.log('[Newsletter Form] Sending request to:', API_ENDPOINTS.NEWSLETTER);
+      console.log('[Newsletter Form] Request payload:', {
+        email: sanitizedEmailForApi,
+        hasToken: !!turnstileToken
+      });
+
       const response = await fetch(API_ENDPOINTS.NEWSLETTER, {
         method: 'POST',
         headers: {
@@ -156,7 +171,13 @@ export default function Newsletter() {
         })
       });
 
-      const result = await response.json().catch(() => ({}));
+      console.log('[Newsletter Form] Response status:', response.status);
+      console.log('[Newsletter Form] Response ok:', response.ok);
+
+      const result = await response.json().catch((parseError) => {
+        console.error('[Newsletter Form] Failed to parse response as JSON:', parseError);
+        return { error: 'Failed to parse server response' };
+      });
       console.log('[Newsletter Form] Response data:', result);
       
       if (!response.ok) {
@@ -196,9 +217,21 @@ export default function Newsletter() {
         formType: 'newsletter',
         timestamp
       });
-    } catch (error) {
-      console.error('Error submitting newsletter subscription:', error);
-      setSubmitStatus("error");
+    } catch (error: any) {
+      console.error('[Newsletter Form] Error submitting newsletter subscription:', error);
+      console.error('[Newsletter Form] Error details:', {
+        message: error?.message,
+        stack: error?.stack,
+        name: error?.name
+      });
+      
+      // Check if it's a network error
+      if (error?.message?.includes('fetch') || error?.message?.includes('network') || error?.message?.includes('Failed to fetch')) {
+        console.error('[Newsletter Form] Network error - API endpoint may be unreachable');
+        setSubmitStatus("error");
+      } else {
+        setSubmitStatus("error");
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -227,23 +260,23 @@ export default function Newsletter() {
                 (formRef as any).current = el;
                 if (!listenerAttachedRef.current) {
                   const handleNativeSubmit = (e: Event) => {
-                    console.log('[Newsletter Form] NATIVE SUBMIT EVENT CAUGHT - PREVENTING DEFAULT AND REDIRECT', e);
-                    e.preventDefault();
-                    e.stopPropagation();
-                    e.stopImmediatePropagation();
-                    if (e.cancelable) {
+                    // Only prevent default if React handler hasn't already handled it
+                    // React's synthetic events run before native events in bubble phase
+                    // So we only need to prevent in capture phase to stop browser navigation
+                    if (e.eventPhase === Event.CAPTURING_PHASE) {
                       e.preventDefault();
+                      e.stopPropagation();
                     }
-                    return false;
                   };
+                  // Only attach in capture phase to prevent browser navigation
+                  // Let React handler run in bubble phase
                   el.addEventListener('submit', handleNativeSubmit, { capture: true, passive: false });
-                  el.addEventListener('submit', handleNativeSubmit, { capture: false, passive: false });
                   listenerAttachedRef.current = true;
                 }
               }
             }}
             onSubmit={handleSubmit}
-            action="/api/newsletter"
+            action="#"
             method="post"
             noValidate
             className="flex flex-col gap-4 max-w-2xl mx-auto"

@@ -14,6 +14,10 @@ const cairo = Cairo({
 export const metadata: Metadata = {
   title: 'CogneraXAI - Nexora | Legal AI Copilot Specialized in UAE Law',
   description: 'Nexora is your legal AI copilot specialized in UAE law. Streamline case management, client relations, and document organization with intelligent automation built for the UAE legal market.',
+  icons: {
+    icon: '/CogneraX-Logo.png',
+    apple: '/CogneraX-Logo.png',
+  },
 }
 
 export default function RootLayout({
@@ -24,7 +28,9 @@ export default function RootLayout({
   return (
     <html lang="en" dir="ltr" suppressHydrationWarning>
       <head>
-        <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔒</text></svg>" />
+        <link rel="icon" href="/CogneraX-Logo.png" type="image/png" />
+        <link rel="apple-touch-icon" href="/CogneraX-Logo.png" />
+        <link rel="shortcut icon" href="/CogneraX-Logo.png" type="image/png" />
         <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
         <script
           dangerouslySetInnerHTML={{

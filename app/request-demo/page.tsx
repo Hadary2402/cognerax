@@ -55,12 +55,17 @@ export default function RequestDemoPage() {
   }
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    console.log('[Request Demo Form] handleSubmit STARTED - PREVENTING DEFAULT')
+    console.log('[Request Demo Form] handleSubmit called');
     e.preventDefault()
     e.stopPropagation()
-    if (e.nativeEvent && 'stopImmediatePropagation' in e.nativeEvent) {
-      e.nativeEvent.stopImmediatePropagation()
+    
+    // Check API endpoint configuration
+    if (!API_ENDPOINTS.REQUEST_DEMO) {
+      console.error('[Request Demo Form] API endpoint not configured');
+      setSubmitStatus('error');
+      return;
     }
+    console.log('[Request Demo Form] API endpoint:', API_ENDPOINTS.REQUEST_DEMO);
     
     // Honeypot check - if this field is filled, it's likely a bot
     // Check both React state AND actual DOM element (in case value was changed via inspect element)
@@ -167,12 +172,13 @@ export default function RequestDemoPage() {
       // For JSON body, sanitize for Excel only (JSON.stringify handles JSON escaping)
       const sanitizedDataForApi = sanitizeObjectForExcel(unicodeConvertedData)
       
-      console.log('[Request Demo Form] About to send fetch to /api/request-demo')
-      console.log('[Request Demo Form] Data being sent:', {
+      console.log('[Request Demo Form] Sending request to:', API_ENDPOINTS.REQUEST_DEMO);
+      console.log('[Request Demo Form] Request payload:', {
         name: sanitizedDataForApi.name,
         email: sanitizedDataForApi.email,
-        company: sanitizedDataForApi.company
-      })
+        company: sanitizedDataForApi.company,
+        hasToken: !!turnstileToken
+      });
       
       const response = await fetch(API_ENDPOINTS.REQUEST_DEMO, {
         method: 'POST',
@@ -192,10 +198,14 @@ export default function RequestDemoPage() {
         })
       })
 
-      console.log('[Request Demo Form] Response status:', response.status)
+      console.log('[Request Demo Form] Response status:', response.status);
+      console.log('[Request Demo Form] Response ok:', response.ok);
       
-      const responseData = await response.json().catch(() => ({}))
-      console.log('[Request Demo Form] Response data:', responseData)
+      const responseData = await response.json().catch((parseError) => {
+        console.error('[Request Demo Form] Failed to parse response as JSON:', parseError);
+        return { error: 'Failed to parse server response' };
+      });
+      console.log('[Request Demo Form] Response data:', responseData);
       
       if (!response.ok) {
         console.error('[Request Demo Form] API error:', responseData)
@@ -222,9 +232,21 @@ export default function RequestDemoPage() {
         formType: 'request-demo',
         timestamp
       })
-    } catch (error) {
-      console.error('Error submitting form:', error)
-      setSubmitStatus('error')
+    } catch (error: any) {
+      console.error('[Request Demo Form] Error submitting form:', error);
+      console.error('[Request Demo Form] Error details:', {
+        message: error?.message,
+        stack: error?.stack,
+        name: error?.name
+      });
+      
+      // Check if it's a network error
+      if (error?.message?.includes('fetch') || error?.message?.includes('network') || error?.message?.includes('Failed to fetch')) {
+        console.error('[Request Demo Form] Network error - API endpoint may be unreachable');
+        setSubmitStatus('error');
+      } else {
+        setSubmitStatus('error');
+      }
     } finally {
       setIsSubmitting(false)
     }
@@ -247,48 +269,27 @@ export default function RequestDemoPage() {
 
           <form 
             ref={(el) => {
-              console.log('[Request Demo Form] Ref callback called with element:', el)
               if (el) {
                 (formRef as any).current = el
-                
-                // Attach listener immediately when form mounts (no setTimeout)
                 if (!listenerAttachedRef.current) {
-                  console.log('[Request Demo Form] Form element mounted, attaching native event listener IMMEDIATELY', el)
-                  listenerAttachedRef.current = true
-                  
                   const handleNativeSubmit = (e: Event) => {
-                    console.log('[Request Demo Form] NATIVE SUBMIT EVENT CAUGHT - PREVENTING DEFAULT AND REDIRECT', e)
-                    e.preventDefault()
-                    e.stopPropagation()
-                    e.stopImmediatePropagation()
-                    if (e.cancelable) {
+                    // Only prevent default if React handler hasn't already handled it
+                    // React's synthetic events run before native events in bubble phase
+                    // So we only need to prevent in capture phase to stop browser navigation
+                    if (e.eventPhase === Event.CAPTURING_PHASE) {
                       e.preventDefault()
+                      e.stopPropagation()
                     }
-                    return false
                   }
-
-                  // Attach in capture phase FIRST (runs before React's handler)
+                  // Only attach in capture phase to prevent browser navigation
+                  // Let React handler run in bubble phase
                   el.addEventListener('submit', handleNativeSubmit, { capture: true, passive: false })
-                  console.log('[Request Demo Form] Native event listener attached in capture phase')
-                  
-                  // Also attach in bubble phase as backup
-                  el.addEventListener('submit', handleNativeSubmit, { capture: false, passive: false })
-                  console.log('[Request Demo Form] Native event listener attached in bubble phase')
-                  
-                  // Also intercept onsubmit attribute
-                  const originalOnSubmit = el.onsubmit
-                  el.onsubmit = (e) => {
-                    console.log('[Request Demo Form] onsubmit attribute caught')
-                    if (e) {
-                      e.preventDefault()
-                    }
-                    return false
-                  }
+                  listenerAttachedRef.current = true
                 }
               }
             }}
             onSubmit={handleSubmit}
-            action="/api/request-demo"
+            action="#"
             method="post"
             noValidate
             className="bg-gray-50 dark:bg-gray-800 rounded-2xl shadow-2xl border border-gray-200 dark:border-gray-700 p-8 lg:p-10 relative" 
