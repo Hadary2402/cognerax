@@ -47,30 +47,50 @@ const getApiBaseUrl = (): string => {
 
 export const API_BASE_URL = getApiBaseUrl()
 
-// Helper function to get full API URL
+// Helper function to get full API URL (dynamic - checks window at call time)
 export const getApiUrl = (endpoint: string): string => {
-  const base = API_BASE_URL
+  // Get base URL dynamically (check window first, then fallback to module-level)
+  let base = ''
+  if (typeof window !== 'undefined' && (window as any).__API_BASE_URL__) {
+    base = (window as any).__API_BASE_URL__
+    // Remove trailing slash if present
+    base = base.endsWith('/') ? base.slice(0, -1) : base
+  } else {
+    base = API_BASE_URL
+  }
+  
   const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`
   
   if (base) {
     // Remove trailing slash from base if present
     let cleanBase = base.endsWith('/') ? base.slice(0, -1) : base
+    const hadProtocol = cleanBase.match(/^https?:\/\//)
     
     // Ensure protocol is present (add https:// if missing)
-    if (cleanBase && !cleanBase.match(/^https?:\/\//)) {
-      console.warn('[API Config] ⚠️ API base URL missing protocol, adding https://');
+    if (cleanBase && !hadProtocol) {
+      if (typeof window !== 'undefined') {
+        console.warn('[API Config] ⚠️ API base URL missing protocol, adding https://');
+        console.warn('[API Config] Original base URL:', cleanBase);
+      }
       cleanBase = `https://${cleanBase}`;
     }
     
-    return `${cleanBase}${cleanEndpoint}`
+    const finalUrl = `${cleanBase}${cleanEndpoint}`
+    
+    // Debug logging in development
+    if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+      console.log('[API Config] Generated URL:', finalUrl);
+    }
+    
+    return finalUrl
   }
   
   return cleanEndpoint
 }
 
-// API endpoints
+// API endpoints - computed dynamically when accessed
 export const API_ENDPOINTS = {
-  CONTACT: getApiUrl('/api/contact'),
-  REQUEST_DEMO: getApiUrl('/api/request-demo'),
-  NEWSLETTER: getApiUrl('/api/newsletter'),
+  get CONTACT() { return getApiUrl('/api/contact') },
+  get REQUEST_DEMO() { return getApiUrl('/api/request-demo') },
+  get NEWSLETTER() { return getApiUrl('/api/newsletter') },
 } as const

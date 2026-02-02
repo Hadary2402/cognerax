@@ -68,6 +68,15 @@ export default function RequestDemoPage() {
     
     // Check if API base URL is set (warn if using relative path)
     const apiBaseUrl = typeof window !== 'undefined' ? (window as any).__API_BASE_URL__ : '';
+    console.log('[Request Demo Form] Raw window.__API_BASE_URL__:', apiBaseUrl);
+    
+    // Check if endpoint is missing protocol (common issue)
+    if (API_ENDPOINTS.REQUEST_DEMO && !API_ENDPOINTS.REQUEST_DEMO.match(/^https?:\/\//) && !API_ENDPOINTS.REQUEST_DEMO.startsWith('/')) {
+      console.error('[Request Demo Form] ⚠️ WARNING: API endpoint missing protocol!');
+      console.error('[Request Demo Form] Endpoint:', API_ENDPOINTS.REQUEST_DEMO);
+      console.error('[Request Demo Form] This will cause 405 errors. Please set NEXT_PUBLIC_API_BASE_URL with https://');
+    }
+    
     if (!apiBaseUrl && API_ENDPOINTS.REQUEST_DEMO.startsWith('/')) {
       console.error('[Request Demo Form] ⚠️ WARNING: API base URL not configured!');
       console.error('[Request Demo Form] Using relative path:', API_ENDPOINTS.REQUEST_DEMO);
