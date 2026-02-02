@@ -2,6 +2,18 @@ import { Resend } from 'resend'
 import { NextRequest, NextResponse } from 'next/server'
 import { generateEmailTemplate, generatePlainTextEmail } from '@/lib/emailTemplate'
 
+// Handle CORS preflight requests
+export async function OPTIONS(request: NextRequest) {
+  return new NextResponse(null, {
+    status: 200,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    },
+  })
+}
+
 export async function POST(request: NextRequest) {
   try {
     console.log('[Request Demo API] Request received')
@@ -60,7 +72,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ 
         error: 'Invalid request body', 
         details: parseError?.message 
-      }, { status: 400 })
+      }, { 
+        status: 400,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+        },
+      })
     }
     
     const { name, email, company, message, emailHtml, emailText, timestamp, turnstileToken } = body
@@ -146,7 +163,14 @@ export async function POST(request: NextRequest) {
     }
 
     console.log('[Request Demo API] Email sent successfully:', data)
-    return NextResponse.json({ success: true, data }, { status: 200 })
+    return NextResponse.json({ success: true, data }, { 
+      status: 200,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      },
+    })
   } catch (error: any) {
     console.error('[Request Demo API] API error:', error)
     console.error('[Request Demo API] Error stack:', error?.stack)

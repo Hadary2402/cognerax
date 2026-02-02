@@ -52,7 +52,20 @@ export default function Newsletter() {
       setSubmitStatus("error");
       return;
     }
+    
+    // Check if API base URL is set (warn if using relative path)
+    const apiBaseUrl = typeof window !== 'undefined' ? (window as any).__API_BASE_URL__ : '';
+    if (!apiBaseUrl && API_ENDPOINTS.NEWSLETTER.startsWith('/')) {
+      console.error('[Newsletter Form] ⚠️ WARNING: API base URL not configured!');
+      console.error('[Newsletter Form] Using relative path:', API_ENDPOINTS.NEWSLETTER);
+      console.error('[Newsletter Form] This will NOT work with static hosting.');
+      console.error('[Newsletter Form] Please set NEXT_PUBLIC_API_BASE_URL environment variable.');
+      setSubmitStatus("error");
+      return;
+    }
+    
     console.log('[Newsletter Form] API endpoint:', API_ENDPOINTS.NEWSLETTER);
+    console.log('[Newsletter Form] API base URL:', apiBaseUrl || 'Not set (using relative)');
     
     // Check Turnstile token
     if (!turnstileToken) {

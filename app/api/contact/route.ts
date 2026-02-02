@@ -2,6 +2,18 @@ import { Resend } from 'resend'
 import { NextRequest, NextResponse } from 'next/server'
 import { generateEmailTemplate, generatePlainTextEmail } from '@/lib/emailTemplate'
 
+// Handle CORS preflight requests
+export async function OPTIONS(request: NextRequest) {
+  return new NextResponse(null, {
+    status: 200,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    },
+  })
+}
+
 export async function POST(request: NextRequest) {
   try {
     console.log('[Contact API] Request received')
@@ -151,7 +163,14 @@ export async function POST(request: NextRequest) {
     }
 
     console.log('[Contact API] Email sent successfully:', data)
-    return NextResponse.json({ success: true, data }, { status: 200 })
+    return NextResponse.json({ success: true, data }, { 
+      status: 200,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      },
+    })
   } catch (error: any) {
     console.error('[Contact API] API error:', error)
     console.error('[Contact API] Error stack:', error?.stack)

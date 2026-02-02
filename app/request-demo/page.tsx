@@ -65,7 +65,20 @@ export default function RequestDemoPage() {
       setSubmitStatus('error');
       return;
     }
+    
+    // Check if API base URL is set (warn if using relative path)
+    const apiBaseUrl = typeof window !== 'undefined' ? (window as any).__API_BASE_URL__ : '';
+    if (!apiBaseUrl && API_ENDPOINTS.REQUEST_DEMO.startsWith('/')) {
+      console.error('[Request Demo Form] ⚠️ WARNING: API base URL not configured!');
+      console.error('[Request Demo Form] Using relative path:', API_ENDPOINTS.REQUEST_DEMO);
+      console.error('[Request Demo Form] This will NOT work with static hosting.');
+      console.error('[Request Demo Form] Please set NEXT_PUBLIC_API_BASE_URL environment variable.');
+      setSubmitStatus('error');
+      return;
+    }
+    
     console.log('[Request Demo Form] API endpoint:', API_ENDPOINTS.REQUEST_DEMO);
+    console.log('[Request Demo Form] API base URL:', apiBaseUrl || 'Not set (using relative)');
     
     // Honeypot check - if this field is filled, it's likely a bot
     // Check both React state AND actual DOM element (in case value was changed via inspect element)

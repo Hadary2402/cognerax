@@ -3,6 +3,18 @@ import { NextRequest, NextResponse } from 'next/server'
 import { validateEmail } from '@/lib/sanitize'
 import { generateEmailTemplate, generatePlainTextEmail } from '@/lib/emailTemplate'
 
+// Handle CORS preflight requests
+export async function OPTIONS(request: NextRequest) {
+  return new NextResponse(null, {
+    status: 200,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    },
+  })
+}
+
 export async function POST(request: NextRequest) {
   try {
     console.log('[Newsletter API] Request received')
@@ -295,7 +307,14 @@ export async function POST(request: NextRequest) {
       console.log('[Newsletter API] Notification email sent successfully:', emailData_result)
     }
 
-    return NextResponse.json({ success: true, data, emailSent: !emailError }, { status: 200 })
+    return NextResponse.json({ success: true, data, emailSent: !emailError }, { 
+      status: 200,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      },
+    })
   } catch (error: any) {
     console.error('[Newsletter API] API error:', error)
     console.error('[Newsletter API] Error stack:', error?.stack)
