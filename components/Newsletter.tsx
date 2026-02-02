@@ -156,23 +156,24 @@ export default function Newsletter() {
         })
       });
 
+      const result = await response.json().catch(() => ({}));
+      console.log('[Newsletter Form] Response data:', result);
+      
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        console.error('[Newsletter Form] API error:', errorData);
+        console.error('[Newsletter Form] API error:', result);
         
         // Check for specific error types
-        if (errorData.error) {
+        if (result.error) {
           // Display the API error message
-          console.error('[Newsletter Form] API error message:', errorData.error);
+          console.error('[Newsletter Form] API error message:', result.error);
         }
         
-        throw new Error(errorData.error || `HTTP error! status: ${response.status}`);
+        throw new Error(result.error || `HTTP error! status: ${response.status}`);
       }
-
-      const result = await response.json();
       
       // Check if user is already subscribed
       if (result.alreadySubscribed) {
+        console.log('[Newsletter Form] Already subscribed')
         setSubmitStatus("alreadySubscribed");
         setEmail("");
         setWebsite("");
@@ -181,6 +182,8 @@ export default function Newsletter() {
         return;
       }
 
+      // Success - show notification
+      console.log('[Newsletter Form] Success:', result)
       setSubmitStatus("success");
       setEmail("");
       setWebsite("");

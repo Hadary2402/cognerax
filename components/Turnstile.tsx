@@ -81,7 +81,14 @@ export default function Turnstile({
   }, [])
 
   useEffect(() => {
+    // Prevent duplicate renders
     if (!isReady || !containerRef.current || widgetIdRef.current) {
+      return
+    }
+
+    // Double-check container still exists and doesn't already have a widget
+    if (!containerRef.current || containerRef.current.querySelector('.cf-turnstile-widget')) {
+      console.log('[Turnstile] Container already has widget or doesn\'t exist, skipping render')
       return
     }
 
