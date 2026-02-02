@@ -1,0 +1,360 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    overflow-x: hidden;
+    width: 100%;
+    max-width: 100vw;
+    box-sizing: border-box;
+  }
+  
+  *, *::before, *::after {
+    box-sizing: border-box;
+  }
+  
+  body {
+    @apply text-gray-900 dark:text-gray-100 antialiased bg-white dark:bg-gray-900 transition-colors duration-300;
+    overflow-x: hidden;
+    width: 100%;
+    max-width: 100vw;
+    position: relative;
+  }
+  
+  main {
+    overflow-x: hidden;
+    max-width: 100vw;
+    width: 100%;
+  }
+  
+  section {
+    overflow-x: hidden;
+    max-width: 100vw;
+    width: 100%;
+  }
+  
+  /* Prevent container overflow */
+  div, nav, header, footer, article, aside {
+    max-width: 100%;
+  }
+
+  /* RTL Support - Keep scrollbar on the right side */
+  /* Keep html as LTR so scrollbar stays on right */
+  html {
+    direction: ltr;
+  }
+  
+  html[dir="rtl"] {
+    overflow-x: hidden;
+  }
+  
+  /* Set RTL direction on body for text flow */
+  html[dir="rtl"] body {
+    direction: rtl;
+    overflow-x: hidden;
+    max-width: 100vw;
+  }
+
+  html[dir="rtl"] body {
+    font-family: var(--font-cairo), 'Cairo', 'Tajawal', 'Noto Sans Arabic', 'Segoe UI', 'Tahoma', 'Arial', sans-serif;
+    font-feature-settings: 'kern' 1, 'liga' 1;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  
+  html[dir="rtl"] h1,
+  html[dir="rtl"] h2,
+  html[dir="rtl"] h3,
+  html[dir="rtl"] h4,
+  html[dir="rtl"] h5,
+  html[dir="rtl"] h6 {
+    font-weight: 700;
+    letter-spacing: 0;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-primary-600 hover:bg-primary-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 shadow-lg hover:shadow-xl;
+  }
+  
+  .btn-secondary {
+    @apply bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-primary-600 dark:text-primary-400 font-semibold py-3 px-6 rounded-lg border-2 border-primary-600 dark:border-primary-500 transition-colors duration-200;
+  }
+  
+  .section-container {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24;
+  }
+  
+  .section-title {
+    @apply text-3xl md:text-4xl lg:text-5xl font-bold text-legal-dark dark:text-white mb-4;
+  }
+  
+  .section-subtitle {
+    @apply text-lg md:text-xl text-legal-gray dark:text-gray-300 mb-8 max-w-3xl;
+  }
+
+  /* RTL adjustments - Don't override text-center for headers */
+  /* Section containers keep their own alignment (text-center for headers) */
+  
+  /* Only apply text-right to elements that don't have text-center */
+  html[dir="rtl"] .section-title:not(.text-center),
+  html[dir="rtl"] .section-subtitle:not(.text-center) {
+    @apply text-right;
+  }
+  
+  /* Prevent horizontal scroll */
+  html[dir="rtl"] main,
+  html[dir="rtl"] section {
+    overflow-x: hidden;
+    max-width: 100vw;
+    width: 100%;
+  }
+  
+  html[dir="rtl"] .section-container {
+    max-width: 100%;
+    overflow-x: hidden;
+    width: 100%;
+  }
+  
+  /* Universal overflow prevention for all containers */
+  .section-container {
+    overflow-x: hidden;
+  }
+  
+  /* Prevent images and media from causing overflow */
+  img,
+  video,
+  iframe {
+    max-width: 100%;
+    height: auto;
+  }
+  
+  /* RTL spacing adjustments - removed global direction to avoid conflicts */
+  
+  /* RTL margin and padding utilities */
+  html[dir="rtl"] .ml-auto {
+    margin-left: 0;
+    margin-right: auto;
+  }
+  
+  html[dir="rtl"] .mr-auto {
+    margin-right: 0;
+    margin-left: auto;
+  }
+  
+  /* RTL flexbox adjustments */
+  html[dir="rtl"] .flex-row {
+    flex-direction: row-reverse;
+  }
+  
+  /* RTL text alignment */
+  html[dir="rtl"] .text-left {
+    text-align: right;
+  }
+  
+  html[dir="rtl"] .text-right {
+    text-align: right;
+  }
+  
+  /* RTL border radius adjustments for icons and buttons */
+  html[dir="rtl"] button,
+  html[dir="rtl"] .btn-primary,
+  html[dir="rtl"] .btn-secondary {
+    direction: rtl;
+  }
+  
+  /* RTL list styles */
+  html[dir="rtl"] ul,
+  html[dir="rtl"] ol {
+    padding-right: 1.5rem;
+    padding-left: 0;
+  }
+  
+  html[dir="rtl"] li {
+    text-align: right;
+  }
+  
+  /* RTL input and form elements */
+  html[dir="rtl"] input,
+  html[dir="rtl"] textarea,
+  html[dir="rtl"] select {
+    text-align: right;
+    direction: rtl;
+  }
+  
+  html[dir="rtl"] input::placeholder,
+  html[dir="rtl"] textarea::placeholder {
+    text-align: right;
+    direction: rtl;
+  }
+
+  /* Performance optimizations for video */
+  video {
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    will-change: opacity;
+  }
+
+  /* Navbar link underline animation */
+  .nav-link {
+    @apply relative;
+  }
+
+  .nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: -4px;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background-color: currentColor;
+    transition: width 0.3s ease-in-out, opacity 0.3s ease-in-out;
+    opacity: 0;
+  }
+
+  .nav-link:hover::after {
+    width: 100%;
+    opacity: 1;
+  }
+
+  /* RTL support for navbar links */
+  html[dir="rtl"] .nav-link::after {
+    left: auto;
+    right: 0;
+  }
+  
+  /* Better Arabic number formatting */
+  html[dir="rtl"] body {
+    font-variant-numeric: normal;
+  }
+  
+  /* RTL icon adjustments - only for directional icons */
+  html[dir="rtl"] svg[class*="lucide-chevron-right"],
+  html[dir="rtl"] svg[class*="lucide-arrow-right"],
+  html[dir="rtl"] svg[class*="lucide-arrow-left"] {
+    transform: scaleX(-1);
+  }
+  
+  /* RTL card and container adjustments */
+  html[dir="rtl"] .card,
+  html[dir="rtl"] article,
+  html[dir="rtl"] section {
+    text-align: right;
+  }
+  
+  /* RTL table adjustments */
+  html[dir="rtl"] table {
+    direction: rtl;
+  }
+  
+  html[dir="rtl"] th,
+  html[dir="rtl"] td {
+    text-align: right;
+  }
+  
+  /* RTL modal and dropdown adjustments */
+  html[dir="rtl"] .modal,
+  html[dir="rtl"] .dropdown {
+    direction: rtl;
+  }
+  
+  /* RTL navigation adjustments */
+  html[dir="rtl"] nav {
+    direction: rtl;
+  }
+  
+  /* Better line height for Arabic text */
+  html[dir="rtl"] p,
+  html[dir="rtl"] span,
+  html[dir="rtl"] div {
+    line-height: 1.8;
+  }
+  
+  html[dir="rtl"] h1,
+  html[dir="rtl"] h2,
+  html[dir="rtl"] h3 {
+    line-height: 1.6;
+  }
+  
+  /* RTL button icon spacing - handled by component classes */
+  
+  /* RTL focus ring adjustments */
+  html[dir="rtl"] *:focus {
+    outline-offset: -2px;
+  }
+  
+
+  /* Custom scrollbar for table of contents */
+  .toc-scrollable {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(156 163 175) rgb(243 244 246); /* gray-400 on gray-100 for light mode */
+  }
+
+  .dark .toc-scrollable {
+    scrollbar-color: rgb(75 85 99) rgb(31 41 55); /* gray-600 on gray-800 for dark mode */
+  }
+
+  .toc-scrollable::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .toc-scrollable::-webkit-scrollbar-track {
+    background: rgb(243 244 246); /* gray-100 */
+    border-radius: 10px;
+    margin: 4px 0;
+  }
+
+  .dark .toc-scrollable::-webkit-scrollbar-track {
+    background: rgb(31 41 55); /* gray-800 */
+  }
+
+  .toc-scrollable::-webkit-scrollbar-thumb {
+    background-color: rgb(156 163 175); /* gray-400 */
+    border-radius: 10px;
+    border: 1px solid rgb(243 244 246); /* subtle border for light mode */
+  }
+
+  .toc-scrollable::-webkit-scrollbar-thumb:hover {
+    background-color: rgb(107 114 128); /* gray-500 */
+  }
+
+  .dark .toc-scrollable::-webkit-scrollbar-thumb {
+    background-color: rgb(75 85 99); /* gray-600 */
+    border: 1px solid rgb(31 41 55); /* subtle border for dark mode */
+  }
+
+  .dark .toc-scrollable::-webkit-scrollbar-thumb:hover {
+    background-color: rgb(107 114 128); /* gray-500 */
+  }
+
+  /* Ensure Turnstile captcha widgets are always visible */
+  [data-cf-turnstile],
+  iframe[src*="challenges.cloudflare.com"] {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    position: relative !important;
+    z-index: 1 !important;
+    overflow: visible !important;
+    max-width: 100% !important;
+    width: auto !important;
+    height: auto !important;
+    min-height: 65px !important;
+    min-width: 300px !important;
+  }
+
+  /* Ensure Turnstile container is visible */
+  .cf-turnstile {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+  }
+
+}
+
