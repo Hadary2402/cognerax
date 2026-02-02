@@ -8,17 +8,28 @@ const getApiBaseUrl = (): string => {
   if (typeof window !== 'undefined' && (window as any).__API_BASE_URL__) {
     const url = (window as any).__API_BASE_URL__
     // Remove trailing slash if present
-    return url.endsWith('/') ? url.slice(0, -1) : url
+    const cleanUrl = url.endsWith('/') ? url.slice(0, -1) : url
+    if (cleanUrl && typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+      console.log('[API Config] Using API Base URL from window:', cleanUrl)
+    }
+    return cleanUrl
   }
   
   // Check for Next.js public env var (build time) - only works during SSR/build
   if (typeof process !== 'undefined' && process.env.NEXT_PUBLIC_API_BASE_URL) {
     const url = process.env.NEXT_PUBLIC_API_BASE_URL
-    return url.endsWith('/') ? url.slice(0, -1) : url
+    const cleanUrl = url.endsWith('/') ? url.slice(0, -1) : url
+    if (cleanUrl && typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+      console.log('[API Config] Using API Base URL from process.env:', cleanUrl)
+    }
+    return cleanUrl
   }
   
   // Default to empty (relative paths) - only works with Node.js server
   // For static hosting, this will need to be set via window.__API_BASE_URL__
+  if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+    console.warn('[API Config] ⚠️ No API Base URL configured - using relative paths')
+  }
   return ''
 }
 

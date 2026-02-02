@@ -57,7 +57,16 @@ export default function RootLayout({
             __html: `
               (function() {
                 // Set API base URL from environment variable or default to empty (relative paths)
-                window.__API_BASE_URL__ = ${JSON.stringify(process.env.NEXT_PUBLIC_API_BASE_URL || '')};
+                const apiBaseUrl = ${JSON.stringify(process.env.NEXT_PUBLIC_API_BASE_URL || '')};
+                window.__API_BASE_URL__ = apiBaseUrl;
+                
+                // Debug logging (only in development or if URL is set)
+                if (apiBaseUrl) {
+                  console.log('[API Config] API Base URL set to:', apiBaseUrl);
+                } else {
+                  console.warn('[API Config] ⚠️ NEXT_PUBLIC_API_BASE_URL is not set!');
+                  console.warn('[API Config] Forms will use relative paths which won\'t work with static hosting.');
+                }
               })();
             `,
           }}
