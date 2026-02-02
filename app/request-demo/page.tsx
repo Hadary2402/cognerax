@@ -194,22 +194,23 @@ export default function RequestDemoPage() {
 
       console.log('[Request Demo Form] Response status:', response.status)
       
+      const responseData = await response.json().catch(() => ({}))
+      console.log('[Request Demo Form] Response data:', responseData)
+      
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}))
-        console.error('[Request Demo Form] API error:', errorData)
+        console.error('[Request Demo Form] API error:', responseData)
         
         // Check for specific error types
-        if (errorData.error) {
+        if (responseData.error) {
           // Display the API error message
-          console.error('[Request Demo Form] API error message:', errorData.error)
+          console.error('[Request Demo Form] API error message:', responseData.error)
         }
         
-        throw new Error(errorData.error || `HTTP error! status: ${response.status}`)
+        throw new Error(responseData.error || `HTTP error! status: ${response.status}`)
       }
-      
-      const responseData = await response.json()
-      console.log('[Request Demo Form] Success:', responseData)
 
+      // Success - show notification
+      console.log('[Request Demo Form] Success:', responseData)
       setSubmitStatus('success')
       setFormData({ name: '', email: '', company: '', message: '', website: '' })
       setTurnstileToken(null) // Reset token after successful submission

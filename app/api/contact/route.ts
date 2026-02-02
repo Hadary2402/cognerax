@@ -54,6 +54,15 @@ export async function POST(request: NextRequest) {
     
     const { name, company, email, inquiryType, message, emailHtml, emailText, timestamp, turnstileToken } = body
 
+    // Validate required fields
+    if (!name || !email || !company || !inquiryType) {
+      console.error('[Contact API] Missing required fields:', { hasName: !!name, hasEmail: !!email, hasCompany: !!company, hasInquiryType: !!inquiryType })
+      return NextResponse.json({ 
+        error: 'Missing required fields', 
+        details: 'Name, email, company, and inquiry type are required' 
+      }, { status: 400 })
+    }
+
     // Verify Turnstile token
     if (turnstileToken) {
       try {
@@ -109,11 +118,12 @@ export async function POST(request: NextRequest) {
 
     // Send email using Resend
     console.log('[Contact API] Sending email to: cognerax@outlook.com')
+    console.log('[Contact API] Email data:', { name, email, company, inquiryType, hasMessage: !!message })
     const { data, error } = await resend.emails.send({
       from: 'CogneraX Website <onboarding@resend.dev>',
       to: ['cognerax@outlook.com'],
       subject: `New Contact Form Submission - ${inquiryType || 'General Inquiry'}`,
-      html: emailHtml || `
+      html: finalEmailHtml || `
         <h2>New Contact Form Submission</h2>
         <p><strong>Name:</strong> ${name || 'N/A'}</p>
         <p><strong>Company:</strong> ${company || 'N/A'}</p>
@@ -123,7 +133,7 @@ export async function POST(request: NextRequest) {
         <p>${message || 'N/A'}</p>
         <p><strong>Timestamp:</strong> ${new Date().toISOString()}</p>
       `,
-      text: emailText || `
+      text: finalEmailText || `
         New Contact Form Submission
         
         Name: ${name || 'N/A'}

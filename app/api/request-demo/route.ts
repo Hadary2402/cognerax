@@ -115,12 +115,23 @@ export async function POST(request: NextRequest) {
         message,
         timestamp: timestamp || new Date().toISOString()
       }
+      console.log('[Request Demo API] Generating email templates with data:', { name, email, company, hasMessage: !!message })
       finalEmailHtml = generateEmailTemplate(emailData, 'request-demo')
       finalEmailText = generatePlainTextEmail(emailData, 'request-demo')
     }
 
+    // Validate required fields before sending
+    if (!name || !email || !company) {
+      console.error('[Request Demo API] Missing required fields:', { hasName: !!name, hasEmail: !!email, hasCompany: !!company })
+      return NextResponse.json({ 
+        error: 'Missing required fields', 
+        details: 'Name, email, and company are required' 
+      }, { status: 400 })
+    }
+
     // Send email using Resend
     console.log('[Request Demo API] Sending email to: cognerax@outlook.com')
+    console.log('[Request Demo API] Email data:', { name, email, company, hasMessage: !!message })
     const { data, error } = await resend.emails.send({
       from: 'CogneraX Website <onboarding@resend.dev>',
       to: ['cognerax@outlook.com'],

@@ -237,19 +237,23 @@ export default function ContactPage() {
         })
       })
 
+      const responseData = await response.json().catch(() => ({}))
+      console.log('[Contact Form] Response data:', responseData)
+      
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}))
-        console.error('[Contact Form] API error:', errorData)
+        console.error('[Contact Form] API error:', responseData)
         
         // Check for specific error types
-        if (errorData.error) {
+        if (responseData.error) {
           // Display the API error message
-          console.error('[Contact Form] API error message:', errorData.error)
+          console.error('[Contact Form] API error message:', responseData.error)
         }
         
-        throw new Error(errorData.error || `HTTP error! status: ${response.status}`)
+        throw new Error(responseData.error || `HTTP error! status: ${response.status}`)
       }
 
+      // Success - show notification
+      console.log('[Contact Form] Success:', responseData)
       setSubmitStatus('success')
       setFormData({ name: '', company: '', email: '', inquiryType: '', message: '', website: '' })
       setTurnstileToken(null) // Reset token after successful submission
