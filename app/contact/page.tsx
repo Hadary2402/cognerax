@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { useLanguage } from '@/contexts/LanguageContext'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
@@ -29,6 +29,24 @@ export default function ContactPage() {
   const [rateLimitRetryAfter, setRateLimitRetryAfter] = useState<number>(0)
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null)
   const [turnstileError, setTurnstileError] = useState(false)
+
+  // Memoize Turnstile callbacks to prevent widget reload
+  const handleTurnstileSuccess = useCallback((token: string) => {
+    console.log('[Contact Form] Turnstile verified, token received')
+    setTurnstileToken(token)
+    setTurnstileError(false)
+  }, [])
+
+  const handleTurnstileError = useCallback(() => {
+    console.error('[Contact Form] Turnstile error')
+    setTurnstileToken(null)
+    setTurnstileError(true)
+  }, [])
+
+  const handleTurnstileExpire = useCallback(() => {
+    console.log('[Contact Form] Turnstile token expired')
+    setTurnstileToken(null)
+  }, [])
 
   const inquiryTypes = [
     { value: 'pricing', label: 'Pricing' },
@@ -438,20 +456,9 @@ export default function ContactPage() {
               <div className="flex justify-center">
                 <Turnstile
                   siteKey="0x4AAAAAACBPITLIpkr5lgfq"
-                  onSuccess={(token) => {
-                    console.log('[Contact Form] Turnstile verified, token received');
-                    setTurnstileToken(token);
-                    setTurnstileError(false);
-                  }}
-                  onError={() => {
-                    console.error('[Contact Form] Turnstile error');
-                    setTurnstileToken(null);
-                    setTurnstileError(true);
-                  }}
-                  onExpire={() => {
-                    console.log('[Contact Form] Turnstile token expired');
-                    setTurnstileToken(null);
-                  }}
+                  onSuccess={handleTurnstileSuccess}
+                  onError={handleTurnstileError}
+                  onExpire={handleTurnstileExpire}
                   theme="auto"
                   size="normal"
                 />

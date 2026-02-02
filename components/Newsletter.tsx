@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback } from "react";
 import { Mail, CheckCircle } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { sanitizeForExcel, validateEmail, validateNotEmpty } from "@/lib/sanitize";
@@ -23,6 +23,24 @@ export default function Newsletter() {
   const [rateLimitRetryAfter, setRateLimitRetryAfter] = useState<number>(0);
   const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
   const [turnstileError, setTurnstileError] = useState(false);
+
+  // Memoize Turnstile callbacks to prevent widget reload
+  const handleTurnstileSuccess = useCallback((token: string) => {
+    console.log('[Newsletter Form] Turnstile verified, token received');
+    setTurnstileToken(token);
+    setTurnstileError(false);
+  }, []);
+
+  const handleTurnstileError = useCallback(() => {
+    console.error('[Newsletter Form] Turnstile error');
+    setTurnstileToken(null);
+    setTurnstileError(true);
+  }, []);
+
+  const handleTurnstileExpire = useCallback(() => {
+    console.log('[Newsletter Form] Turnstile token expired');
+    setTurnstileToken(null);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -255,20 +273,9 @@ export default function Newsletter() {
             <div className="flex justify-center">
               <Turnstile
                 siteKey="0x4AAAAAACBPITLIpkr5lgfq"
-                onSuccess={(token) => {
-                  console.log('[Newsletter Form] Turnstile verified, token received');
-                  setTurnstileToken(token);
-                  setTurnstileError(false);
-                }}
-                onError={() => {
-                  console.error('[Newsletter Form] Turnstile error');
-                  setTurnstileToken(null);
-                  setTurnstileError(true);
-                }}
-                onExpire={() => {
-                  console.log('[Newsletter Form] Turnstile token expired');
-                  setTurnstileToken(null);
-                }}
+                onSuccess={handleTurnstileSuccess}
+                onError={handleTurnstileError}
+                onExpire={handleTurnstileExpire}
                 theme="auto"
                 size="normal"
               />

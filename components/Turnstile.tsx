@@ -122,7 +122,9 @@ export default function Turnstile({
         }
       }
     }
-  }, [isReady, siteKey, onSuccess, onError, onExpire, theme, size])
+    // Only depend on isReady and siteKey - callbacks are stable references
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isReady, siteKey, theme, size])
 
   return (
     <div className={className}>
