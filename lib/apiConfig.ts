@@ -9,8 +9,14 @@ const getApiBaseUrl = (): string => {
     const url = (window as any).__API_BASE_URL__
     // Remove trailing slash if present
     const cleanUrl = url.endsWith('/') ? url.slice(0, -1) : url
-    if (cleanUrl && typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
-      console.log('[API Config] Using API Base URL from window:', cleanUrl)
+    if (cleanUrl) {
+      if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+        console.log('[API Config] Using API Base URL from window:', cleanUrl)
+      }
+      // Warn if protocol is missing (but don't add it here - let getApiUrl handle it)
+      if (cleanUrl && !cleanUrl.match(/^https?:\/\//)) {
+        console.warn('[API Config] ⚠️ API Base URL missing protocol (https://). Will be added automatically.');
+      }
     }
     return cleanUrl
   }
@@ -19,8 +25,14 @@ const getApiBaseUrl = (): string => {
   if (typeof process !== 'undefined' && process.env.NEXT_PUBLIC_API_BASE_URL) {
     const url = process.env.NEXT_PUBLIC_API_BASE_URL
     const cleanUrl = url.endsWith('/') ? url.slice(0, -1) : url
-    if (cleanUrl && typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
-      console.log('[API Config] Using API Base URL from process.env:', cleanUrl)
+    if (cleanUrl) {
+      if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+        console.log('[API Config] Using API Base URL from process.env:', cleanUrl)
+      }
+      // Warn if protocol is missing
+      if (cleanUrl && !cleanUrl.match(/^https?:\/\//)) {
+        console.warn('[API Config] ⚠️ API Base URL missing protocol (https://). Will be added automatically.');
+      }
     }
     return cleanUrl
   }
@@ -42,7 +54,14 @@ export const getApiUrl = (endpoint: string): string => {
   
   if (base) {
     // Remove trailing slash from base if present
-    const cleanBase = base.endsWith('/') ? base.slice(0, -1) : base
+    let cleanBase = base.endsWith('/') ? base.slice(0, -1) : base
+    
+    // Ensure protocol is present (add https:// if missing)
+    if (cleanBase && !cleanBase.match(/^https?:\/\//)) {
+      console.warn('[API Config] ⚠️ API base URL missing protocol, adding https://');
+      cleanBase = `https://${cleanBase}`;
+    }
+    
     return `${cleanBase}${cleanEndpoint}`
   }
   
