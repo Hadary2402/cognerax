@@ -4,8 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build && node copy-htaccess.js",
-    "export": "next build && node copy-htaccess.js",
+    "build": "next build",
+    "export": "next build",
     "start": "next start",
     "lint": "next lint"
   },

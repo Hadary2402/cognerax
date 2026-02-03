@@ -2,14 +2,16 @@ import { Resend } from 'resend'
 import { NextRequest, NextResponse } from 'next/server'
 import { validateEmail } from '@/lib/sanitize'
 import { generateEmailTemplate, generatePlainTextEmail } from '@/lib/emailTemplate'
-import { getCorsHeaders } from '@/lib/cors'
 
 // Handle CORS preflight requests
 export async function OPTIONS(request: NextRequest) {
-  const origin = request.headers.get('origin')
   return new NextResponse(null, {
     status: 200,
-    headers: getCorsHeaders(origin),
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    },
   })
 }
 
@@ -305,10 +307,13 @@ export async function POST(request: NextRequest) {
       console.log('[Newsletter API] Notification email sent successfully:', emailData_result)
     }
 
-    const origin = request.headers.get('origin')
     return NextResponse.json({ success: true, data, emailSent: !emailError }, { 
       status: 200,
-      headers: getCorsHeaders(origin),
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      },
     })
   } catch (error: any) {
     console.error('[Newsletter API] API error:', error)
