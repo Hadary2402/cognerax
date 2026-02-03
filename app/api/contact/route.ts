@@ -1,16 +1,14 @@
 import { Resend } from 'resend'
 import { NextRequest, NextResponse } from 'next/server'
 import { generateEmailTemplate, generatePlainTextEmail } from '@/lib/emailTemplate'
+import { getCorsHeaders } from '@/lib/cors'
 
 // Handle CORS preflight requests
 export async function OPTIONS(request: NextRequest) {
+  const origin = request.headers.get('origin')
   return new NextResponse(null, {
     status: 200,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-    },
+    headers: getCorsHeaders(origin),
   })
 }
 
@@ -163,13 +161,10 @@ export async function POST(request: NextRequest) {
     }
 
     console.log('[Contact API] Email sent successfully:', data)
+    const origin = request.headers.get('origin')
     return NextResponse.json({ success: true, data }, { 
       status: 200,
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'POST, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-      },
+      headers: getCorsHeaders(origin),
     })
   } catch (error: any) {
     console.error('[Contact API] API error:', error)
