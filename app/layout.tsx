@@ -15,7 +15,7 @@ export const metadata: Metadata = {
   title: 'CogneraXAI - Nexora | Legal AI Copilot Specialized in UAE Law',
   description: 'Nexora is your legal AI copilot specialized in UAE law. Streamline case management, client relations, and document organization with intelligent automation built for the UAE legal market.',
   icons: {
-    icon: '/CogneraX-Logo.png',
+    icon: '/favico.png',
     apple: '/CogneraX-Logo.png',
   },
 }
