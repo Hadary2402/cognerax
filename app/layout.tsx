@@ -16,7 +16,7 @@ export const metadata: Metadata = {
   description: 'Nexora is your legal AI copilot specialized in UAE law. Streamline case management, client relations, and document organization with intelligent automation built for the UAE legal market.',
   icons: {
     icon: '/favico.png',
-    apple: '/CogneraX-Logo.png',
+    apple: '/favico.png',
   },
 }
 
@@ -28,7 +28,7 @@ export default function RootLayout({
   return (
     <html lang="en" dir="ltr" suppressHydrationWarning>
       <head>
-        <link rel="icon" href="/CogneraX-Logo.png" type="image/png" />
+        <link rel="icon" href="/favico.png" type="image/png" />
         <link rel="apple-touch-icon" href="/CogneraX-Logo.png" />
         <link rel="shortcut icon" href="/CogneraX-Logo.png" type="image/png" />
         <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
