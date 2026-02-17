@@ -30,7 +30,7 @@ export default function RootLayout({
       <head>
         <link rel="icon" href="/favico.png" type="image/png" />
         <link rel="apple-touch-icon" href="/favico.png" />
-        <link rel="shortcut icon" href="/CogneraX-Logo.png" type="image/png" />
+        <link rel="shortcut icon" href="/favico.png" type="image/png" />
         <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
         <script
           dangerouslySetInnerHTML={{
