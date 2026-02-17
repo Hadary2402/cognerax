@@ -40,6 +40,7 @@ export default function Turnstile({
 }: TurnstileProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const widgetIdRef = useRef<string | null>(null)
+  const isRenderingRef = useRef(false)
   const [isReady, setIsReady] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -82,18 +83,49 @@ export default function Turnstile({
 
   useEffect(() => {
     // Prevent duplicate renders
-    if (!isReady || !containerRef.current || widgetIdRef.current) {
+    if (!isReady || !containerRef.current) {
       return
     }
 
-    // Double-check container still exists and doesn't already have a widget
-    if (!containerRef.current || containerRef.current.querySelector('.cf-turnstile-widget')) {
-      console.log('[Turnstile] Container already has widget or doesn\'t exist, skipping render')
+    const container = containerRef.current
+    if (!container) {
       return
     }
+
+    // Cleanup any existing widget first (handles re-renders when dependencies change)
+    if (widgetIdRef.current && window.turnstile) {
+      try {
+        window.turnstile.remove(widgetIdRef.current)
+        widgetIdRef.current = null
+        isRenderingRef.current = false
+        // Clear the container
+        container.innerHTML = ''
+      } catch (err) {
+        console.error('[Turnstile] Error removing existing widget:', err)
+      }
+    }
+
+    // If already rendering, skip (prevents race conditions)
+    if (isRenderingRef.current) {
+      return
+    }
+
+    // Check if container already has Turnstile widget elements (iframe or widget div)
+    // This prevents double renders in React Strict Mode
+    const hasWidget = container.querySelector('iframe') || 
+                      container.querySelector('[data-callback]') ||
+                      (container.children.length > 0 && widgetIdRef.current === null)
+    
+    if (hasWidget && widgetIdRef.current === null) {
+      console.log('[Turnstile] Container already has widget but no widgetId, skipping render')
+      return
+    }
+
+    // Mark as rendering to prevent race conditions
+    isRenderingRef.current = true
 
     try {
-      const widgetId = window.turnstile!.render(containerRef.current, {
+      const widgetId = window.turnstile!.render(container, {
         sitekey: siteKey,
         callback: (token: string) => {
           console.log('[Turnstile] Success callback called with token')
@@ -113,8 +145,10 @@ export default function Turnstile({
       })
 
       widgetIdRef.current = widgetId
+      isRenderingRef.current = false
       console.log('[Turnstile] Widget rendered with ID:', widgetId)
     } catch (err) {
+      isRenderingRef.current = false
       console.error('[Turnstile] Error rendering widget:', err)
       setError('Failed to render Turnstile widget')
     }
@@ -124,6 +158,7 @@ export default function Turnstile({
         try {
           window.turnstile.remove(widgetIdRef.current)
           widgetIdRef.current = null
+          isRenderingRef.current = false
         } catch (err) {
           console.error('[Turnstile] Error removing widget:', err)
         }
