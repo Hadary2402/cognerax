@@ -29,9 +29,10 @@ export default function RootLayout({
     <html lang="en" dir="ltr" suppressHydrationWarning>
       <head>
         <link rel="icon" href="/favico.png" type="image/png" />
-        <link rel="apple-touch-icon" href="/favico.png" />
-        <link rel="shortcut icon" href="/favico.png" type="image/png" />
-        <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+        <link rel="apple-touch-icon" href="/favicon.png" />
+        <link rel="shortcut icon" href="/favicon.png" type="image/png" />
+        {/* Cloudflare Turnstile - explicit render mode to avoid auto-rendering widgets */}
+        <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
         <script
           dangerouslySetInnerHTML={{
             __html: `
