@@ -170,7 +170,10 @@ export default function Turnstile({
 
   return (
     <div className={className}>
-      <div ref={containerRef} className="cf-turnstile" data-sitekey={siteKey} />
+      {/* Container for Turnstile widget. We avoid the cf-turnstile class so the
+          Cloudflare script doesn't auto-render a widget here; rendering is
+          handled explicitly via window.turnstile.render in this component. */}
+      <div ref={containerRef} />
       {error && (
         <p className="text-red-500 text-sm mt-2">{error}</p>
       )}
